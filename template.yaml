@@ -1,0 +1,38 @@
+$schema: http://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#
+contentVersion: 1.0.0.0
+outputs:
+  adminUsername: {type: string, value: '[parameters(''adminUsername'')]'}
+parameters:
+  adminPassword: {type: securestring}
+  adminUsername: {type: string}
+  availabilitySetName: {type: string}
+  location: {type: string}
+  networkInterfaceID: {type: string}
+  subnetName: {type: string}
+  virtualMachineName: {type: string}
+  virtualMachineSize: {type: string}
+  virtualNetworkName: {type: string}
+resources:
+- apiVersion: 2016-04-30-preview
+  location: '[parameters(''location'')]'
+  name: '[parameters(''virtualMachineName'')]'
+  properties:
+    availabilitySet: {id: '[resourceId(''Microsoft.Compute/availabilitySets'', parameters(''availabilitySetName''))]'}
+    hardwareProfile: {vmSize: '[parameters(''virtualMachineSize'')]'}
+    networkProfile:
+      networkInterfaces:
+      - {id: '[parameters(''networkInterfaceID'')]'}
+    osProfile: {adminPassword: '[parameters(''adminPassword'')]', adminUsername: '[parameters(''adminUsername'')]',
+      computerName: '[parameters(''virtualMachineName'')]'}
+    storageProfile:
+      dataDisks: []
+      imageReference: {offer: RHEL, publisher: RedHat, sku: '6.8', version: latest}
+      osDisk:
+        createOption: fromImage
+        diskSizeGB: 300
+        managedDisk: {storageAccountType: Premium_LRS}
+  type: Microsoft.Compute/virtualMachines
+variables: {subnetRef: '[concat(variables(''vnetId''), ''/subnets/'', parameters(''subnetName''))]',
+  vnetId: '[resourceId(''Resource_Group_Data_Lake'',''Microsoft.Network/virtualNetworks'',
+    parameters(''virtualNetworkName''))]'}
+
